@@ -4,4 +4,4 @@
 - YES YOU CAN INDEED RUN DOOM (If you're insane enough, just need to add memory module, input? just use binary for input lmao)
 
 ## Our mascot :3
-- ![PN transistor -chan](https://github.com/mimi1595O/OpenALU/blob/main/pnchanv2.png)
+- ![PN transistor -chan](https://github.com/mimi1595O/OpenALU/blob/main/pnchanv1.png)
