@@ -17,7 +17,7 @@ public class Circuit {
      // A map to hold every node (inputs, outputs, internal, Vdd, Vss) by its name for quick access.
     private final Map<String, node> nodes = new HashMap<>();
     // A list of all transistors in the circuit.
-    private final List<Transistor> transistors = new ArrayList<>();
+    private final List<Components> components = new ArrayList<>();
     // Lists to remember the names and order of declared inputs and outputs.
     private final List<String> inputNodeNames = new ArrayList<>();
     private final List<String> outputNodeNames = new ArrayList<>();
@@ -57,34 +57,71 @@ public class Circuit {
     node gate = get_Or_Create_Node(gate_name);
     node source = get_Or_Create_Node(source_name);
     node drain = get_Or_Create_Node(drain_name);
-    transistors.add(new Nmos(gate,source,drain));
+    components.add(new Nmos(gate,source,drain));
     }
     
     public void add_Pmos(String gate_name,String source_name , String drain_name){
     node gate = get_Or_Create_Node(gate_name);
     node source = get_Or_Create_Node(source_name);
     node drain = get_Or_Create_Node(drain_name);
-    transistors.add(new Pmos(gate,source,drain));
+    components.add(new Pmos(gate,source,drain));
     }
+    
+    public void add_nand(String input_A, String input_B, String ... outputs ){
+    node A = get_Or_Create_Node(input_A);
+    node B = get_Or_Create_Node(input_B);
+    List<node> outputnodes = new ArrayList<>();
+    for (String out : outputs) outputnodes.add(get_Or_Create_Node(out) );
+    components.add(new Nand(A,B,outputnodes.toArray(node[]::new)));
+    }
+    
+    public void add_inverter(String input, String ... outputs){
+        
+    node IN =get_Or_Create_Node(input);
+    List<node> outputnodes = new ArrayList<>();
+    
+    for(String out : outputs) outputnodes.add(get_Or_Create_Node(out));
+    
+    
+    components.add(new Inverter(IN, outputnodes.toArray(node[]::new)));
+    }
+    
     
     public void run(){
-        while(true){
-        boolean state_changed = false;
-        for (Transistor transistor : transistors){
-            if(transistor.is_close_circuited()){
-              node source = transistor.source;
-              node drain = transistor.drain;
-              if(source.get_State() != node.States.FLOATING && source.get_State() != drain.get_State())
-              {drain.set_State(source.get_State()); state_changed = true;}
-              else if(drain.get_State() != node.States.FLOATING && drain.get_State() != source.get_State())
-              {source.set_State(drain.get_State()); state_changed = true;}
-              
-                }
-    
-            }
-        if(!state_changed) break;
-        }   
+        int pass = 0;
+    // Loop until the circuit is stable.
+    while (true) {
+        pass++;
+        boolean stateChangedInThisPass = false;
+          Map<String, node.States> statesBeforePass = new HashMap<>();
+        for (Map.Entry<String, node> entry : nodes.entrySet()) {
+            statesBeforePass.put(entry.getKey(), entry.getValue().get_State());
+        }
+
+        
+        for (Components component : components){
+           component.evaluate();    
     }
+    // Check if any node's state changed during this pass
+        for (Map.Entry<String, node> entry : nodes.entrySet()) {
+            if (statesBeforePass.get(entry.getKey()) != entry.getValue().get_State()) {
+                stateChangedInThisPass = true;
+                break; // A change was found, no need to check further
+            }
+        }
+        
+        // If a full pass resulted in no changes, the circuit is stable.
+        if (!stateChangedInThisPass) {
+            break; // Exit the while loop
+        }
+        
+        // Safety break to prevent infinite loops in an oscillating circuit
+        if (pass > 100) {
+            System.out.println("Warning: Simulation unstable. Halting after 100 passes.");
+            break;
+        }
+    
+    }}
     
     public void print_outputs() {
         System.out.print("Result: ");

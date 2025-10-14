@@ -8,13 +8,22 @@ package openalu;
  *
  * @author mimi
  */
-public class Pmos extends Transistor {
+public class Pmos extends Components {
+    private node gate,source,drain;
+    
     public Pmos(node gate, node source, node drain) {
-        
-        super(gate, source, drain);}
-    @Override
-    public boolean is_close_circuited(){
-        
-        return gate.state == node.States.LOW;     
-    }
+        this.gate = gate;
+        this.source = source;
+        this.drain = drain;
 }
+
+    @Override
+    public void evaluate() {
+       if(gate.get_State() == node.States.LOW){
+           if(source.get_State() != node.States.FLOATING && drain.get_State() != source.get_State()) drain.set_State(source.get_State());
+           else if (drain.get_State() != node.States.FLOATING && source.get_State() != drain.get_State()) source.set_State(drain.get_State());
+       
+       }
+    }    
+    }
+
