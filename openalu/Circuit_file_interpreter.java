@@ -23,20 +23,28 @@ public class Circuit_file_interpreter {
     public void interpretFile(String filePath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
-
+            
+            int n_line_counter = 0; //for checking which real \n line is the errror coming from.
             while ((line = reader.readLine()) != null) {
-                int commentIndex = line.indexOf('#');
-            if (commentIndex != -1) {
-                line = line.substring(0, commentIndex);
-            }
-            
-            // 2. Split the line into multiple commands using the semicolon
-            String[] commands = line.split(";");
-            for (String command : commands)
-            {String final_command = command.trim();
-            
-                if (!final_command.isEmpty())parseLine(final_command);}
+                n_line_counter++;
                 
+                int commentIndex = line.indexOf('#');
+                if (commentIndex != -1) {
+                    line = line.substring(0, commentIndex);
+                }
+
+                // 2. Split the line into multiple commands using the semicolon
+                String[] commands = line.split(";");
+                for (String command : commands){
+                    String final_command = command.trim();
+                    if (!final_command.isEmpty()){
+                        if (parseLine(final_command)){ //If error
+                            System.out.println("\tError from line "+n_line_counter);
+                            
+                        };
+                        
+                    }
+                }
             }
         }
 
@@ -44,11 +52,9 @@ public class Circuit_file_interpreter {
         circuit.print_outputs();
     }
 
-    private void parseLine(String line) {
-       
-
+    private boolean parseLine(String line) { //Returns true if error
         
-
+        
         if (line.startsWith("IN ")) {
             handleInputs(line.substring(3).trim());
         } else if (line.startsWith("P ")) {
@@ -61,8 +67,11 @@ public class Circuit_file_interpreter {
             handleNand(line.substring(5).trim());
         } else if (line.startsWith("NOT ")) {
             handleNot(line.substring(4).trim());
+        } else {
+            System.out.println( "Error: Unknown component. ("+line.substring(0, line.indexOf(' '))+")" );
+            return true;
         }
-        
+        return false;
     }
 
     private void handleInputs(String inputsLine) {
