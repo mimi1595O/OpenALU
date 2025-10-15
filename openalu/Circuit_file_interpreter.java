@@ -25,7 +25,18 @@ public class Circuit_file_interpreter {
             String line;
 
             while ((line = reader.readLine()) != null) {
-                parseLine(line.trim());
+                int commentIndex = line.indexOf('#');
+            if (commentIndex != -1) {
+                line = line.substring(0, commentIndex);
+            }
+            
+            // 2. Split the line into multiple commands using the semicolon
+            String[] commands = line.split(";");
+            for (String command : commands)
+            {String final_command = command.trim();
+            
+                if (!final_command.isEmpty())parseLine(final_command);}
+                
             }
         }
 
@@ -34,11 +45,9 @@ public class Circuit_file_interpreter {
     }
 
     private void parseLine(String line) {
-        // Ignore empty or non-command lines
-        if (line.isEmpty() || !line.endsWith(";")) return;
+       
 
-        // Remove semicolon
-        line = line.substring(0, line.length() - 1).trim();
+        
 
         if (line.startsWith("IN ")) {
             handleInputs(line.substring(3).trim());
@@ -53,6 +62,7 @@ public class Circuit_file_interpreter {
         } else if (line.startsWith("NOT ")) {
             handleNot(line.substring(4).trim());
         }
+        
     }
 
     private void handleInputs(String inputsLine) {

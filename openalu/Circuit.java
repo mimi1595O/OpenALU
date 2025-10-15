@@ -18,8 +18,8 @@ public class Circuit {
     private final Map<String, node> nodes = new HashMap<>();
     // A list of all transistors in the circuit.
     private final List<Components> components = new ArrayList<>();
-    // Lists to remember the names and order of declared inputs and outputs.
-    private final List<String> inputNodeNames = new ArrayList<>();
+    
+    
     private final List<String> outputNodeNames = new ArrayList<>();
     
     Circuit(){
@@ -34,16 +34,10 @@ public class Circuit {
     return this.nodes.computeIfAbsent(name, node::new);
     }
     
-    private node get_Or_Create_Node(String name, int state){
-    
-    return this.nodes.computeIfAbsent(name, node::new);
-    
-    
-    }
     
     
     public void add_Input(String name, node.States state) {
-        this.inputNodeNames.add(name);
+        
         get_Or_Create_Node(name);
         this.nodes.get(name).set_State(state);
     }
