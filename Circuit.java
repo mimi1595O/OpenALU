@@ -1,0 +1,134 @@
+
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package openalu;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ *
+ * @author mimi
+ */
+public class Circuit {
+     // A map to hold every node (inputs, outputs, internal, Vdd, Vss) by its name for quick access.
+    private final Map<String, node> nodes = new HashMap<>();
+    // A list of all transistors in the circuit.
+    private final List<Components> components = new ArrayList<>();
+    
+    
+    private final List<String> outputNodeNames = new ArrayList<>();
+    
+    Circuit(){
+        node vddNode = new node("Vdd", node.States.HIGH, true);
+        this.nodes.put("Vdd", vddNode);
+        node vssNode = new node("Vss", node.States.LOW, true);
+        this.nodes.put("Vss", vssNode);
+    
+    }
+    private node get_Or_Create_Node(String name){
+    
+    return this.nodes.computeIfAbsent(name, node::new);
+    }
+    
+    
+    
+    public void add_Input(String name, node.States state) {
+        
+        get_Or_Create_Node(name);
+        this.nodes.get(name).set_State(state);
+    }
+    
+    public void add_Output(String name){
+        this.outputNodeNames.add(name);
+        get_Or_Create_Node(name);
+    }
+    
+    public void add_Nmos(String gate_name,String source_name, String drain_name){
+    node gate = get_Or_Create_Node(gate_name);
+    node source = get_Or_Create_Node(source_name);
+    node drain = get_Or_Create_Node(drain_name);
+    components.add(new Nmos(gate,source,drain));
+    }
+    
+    public void add_Pmos(String gate_name,String source_name , String drain_name){
+    node gate = get_Or_Create_Node(gate_name);
+    node source = get_Or_Create_Node(source_name);
+    node drain = get_Or_Create_Node(drain_name);
+    components.add(new Pmos(gate,source,drain));
+    }
+    
+    public void add_nand(String input_A, String input_B, String ... outputs ){
+    node A = get_Or_Create_Node(input_A);
+    node B = get_Or_Create_Node(input_B);
+    List<node> outputnodes = new ArrayList<>();
+    for (String out : outputs) outputnodes.add(get_Or_Create_Node(out) );
+    components.add(new Nand(A,B,outputnodes.toArray(node[]::new)));
+    }
+    
+    public void add_inverter(String input, String ... outputs){
+        
+    node IN =get_Or_Create_Node(input);
+    List<node> outputnodes = new ArrayList<>();
+    
+    for(String out : outputs) outputnodes.add(get_Or_Create_Node(out));
+    
+    
+    components.add(new Inverter(IN, outputnodes.toArray(node[]::new)));
+    }
+    
+    
+    public void run(){
+        int pass = 0;
+    // Loop until the circuit is stable.
+    while (true) {
+        pass++;
+        boolean stateChangedInThisPass = false;
+          Map<String, node.States> statesBeforePass = new HashMap<>();
+        for (Map.Entry<String, node> entry : nodes.entrySet()) {
+            statesBeforePass.put(entry.getKey(), entry.getValue().get_State());
+        }
+
+        
+        for (Components component : components){
+           component.evaluate();    
+    }
+    // Check if any node's state changed during this pass
+        for (Map.Entry<String, node> entry : nodes.entrySet()) {
+            if (statesBeforePass.get(entry.getKey()) != entry.getValue().get_State()) {
+                stateChangedInThisPass = true;
+                break; // A change was found, no need to check further
+            }
+        }
+        
+        // If a full pass resulted in no changes, the circuit is stable.
+        if (!stateChangedInThisPass) {
+            break; // Exit the while loop
+        }
+        
+        // Safety break to prevent infinite loops in an oscillating circuit
+        if (pass > 100) {
+            System.out.println("Warning: Simulation unstable. Halting after 100 passes.");
+            break;
+        }
+    
+    }}
+    
+    public void print_outputs() {
+        System.out.print("Result: ");
+        for (String name : outputNodeNames) {
+            node n = nodes.get(name);
+            if (n.state == node.States.HIGH) System.out.print("1 ");
+            
+            
+            else if (n.get_State()== node.States.LOW) System.out.print("0 ");
+            
+            else System.out.print("? "); // '?' for FLOATING/unstable
+            
+        }
+        System.out.println();
+    }
+}
