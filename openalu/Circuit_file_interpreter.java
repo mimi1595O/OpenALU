@@ -1,4 +1,4 @@
-// Circuit_file_interpreter.java (Final Version with Full Error Context)
+
 package openalu;
 
 import java.io.*;
@@ -11,12 +11,11 @@ public class Circuit_file_interpreter {
     private final Circuit circuit;
     private final Scanner scanner;
 
-    // A map of component blueprints (class definitions)
     private final Map<String, ComponentBlueprint> blueprints = new HashMap<>();
     private final List<String> inputNodeNames = new ArrayList<>();
     private int instanceCounter = 0;
 
-    // Helper class to store a blueprint's internal command and its original line number
+    // Helper class to store a blueprint's command and its original line number
     private static class BlueprintCommand {
         final int lineNumber;
         final String command;
@@ -27,7 +26,7 @@ public class Circuit_file_interpreter {
         }
     }
 
-    // Updated ComponentBlueprint to use the helper class
+    // Blueprint definition
     private static class ComponentBlueprint {
         String name;
         List<String> orderedPorts = new ArrayList<>();
@@ -51,42 +50,68 @@ public class Circuit_file_interpreter {
         circuit.print_outputs();
     }
 
+    /**
+     * <<--- THIS IS THE FULLY REWRITTEN METHOD ---
+     * Scans the file for all 'class' definitions, correctly handling single-line
+     * and multi-line formats. It populates the blueprints map.
+     */
     private void scanForBlueprints(String filePath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
+            int lineCounter = 0;
             ComponentBlueprint currentBlueprint = null;
-            int lineCounter = 0; 
             boolean inClassBody = false;
 
             while ((line = reader.readLine()) != null) {
                 lineCounter++;
-                String trimmedLine = line.trim();
-                if (trimmedLine.isEmpty() || trimmedLine.startsWith("#")) continue;
+                String remainingLine = line.trim();
 
-                if (trimmedLine.startsWith("class ")) {
-                    Pattern p = Pattern.compile("class\\s+(\\w+)\\s*\\((.*)\\)\\s*\\{");
-                    Matcher m = p.matcher(trimmedLine);
-                    if (m.find()) {
-                        currentBlueprint = new ComponentBlueprint();
-                        currentBlueprint.name = m.group(1);
-                        parsePorts(currentBlueprint, m.group(2));
-                        inClassBody = true;
-                    }
-                } else if (inClassBody) {
-                    if (trimmedLine.startsWith("}")) {
-                        if (currentBlueprint != null) {
-                            blueprints.put(currentBlueprint.name, currentBlueprint);
+                if (remainingLine.isEmpty() || remainingLine.startsWith("#")) continue;
+
+                // This loop allows processing multiple definitions or parts on the same physical line
+                while (!remainingLine.isEmpty()) {
+                    if (inClassBody) {
+                        int braceIndex = remainingLine.indexOf('}');
+                        String bodyContent;
+                        if (braceIndex != -1) {
+                            bodyContent = remainingLine.substring(0, braceIndex);
+                            remainingLine = remainingLine.substring(braceIndex + 1).trim();
+                        } else {
+                            bodyContent = remainingLine;
+                            remainingLine = "";
                         }
-                        currentBlueprint = null;
-                        inClassBody = false;
-                    } else if (currentBlueprint != null) {
-                        // We are inside a class, so process the commands
-                        String[] commands = trimmedLine.split(";");
-                        for (String cmd : commands) {
-                            if (!cmd.trim().isEmpty()) {
-                                // Store the command with its original line number
-                                currentBlueprint.internalNetlist.add(new BlueprintCommand(lineCounter, cmd.trim()));
+
+                        if (!bodyContent.trim().isEmpty()) {
+                            String[] commands = bodyContent.split(";");
+                            for (String cmd : commands) {
+                                if (!cmd.trim().isEmpty()) {
+                                    currentBlueprint.internalNetlist.add(new BlueprintCommand(lineCounter, cmd.trim()));
+                                }
                             }
+                        }
+
+                        if (braceIndex != -1) {
+                            blueprints.put(currentBlueprint.name, currentBlueprint);
+                            currentBlueprint = null;
+                            inClassBody = false;
+                        }
+                    } else { // Not in a class body, so we are looking for a new class definition
+                        if (remainingLine.startsWith("class ")) {
+                            Pattern p = Pattern.compile("^class\\s+(\\w+)\\s*\\((.*)\\)\\s*\\{");
+                            Matcher m = p.matcher(remainingLine);
+                            if (m.find()) {
+                                currentBlueprint = new ComponentBlueprint();
+                                currentBlueprint.name = m.group(1);
+                                parsePorts(currentBlueprint, m.group(2));
+                                inClassBody = true;
+                                remainingLine = remainingLine.substring(m.end()).trim();
+                            } else {
+                                // Malformed class, ignore the rest of this line
+                                remainingLine = "";
+                            }
+                        } else {
+                            // This line does not contain a class definition, ignore in this pass
+                            remainingLine = "";
                         }
                     }
                 }
@@ -117,11 +142,10 @@ public class Circuit_file_interpreter {
 
                 if (line.startsWith("class ")) {
                     inClassBody = true;
-                    continue;
                 }
-                if (inClassBody && line.startsWith("}")) {
+                if (line.contains("}")) {
                     inClassBody = false;
-                    continue;
+                    continue; // Skip the rest of a line after a class definition closes
                 }
                 if (inClassBody) continue;
 
@@ -207,11 +231,11 @@ public class Circuit_file_interpreter {
                 System.out.print(name + " = ");
                 String input = scanner.nextLine().trim();
                 if ("1".equals(input) || "t".equalsIgnoreCase(input)) {
-//                    circuit.add_Input(name, node.States.HIGH);
+                    //circuit.add_Input(name, node.States.HIGH);
                     circuit.add_Input(name);
                     break;
                 } else if ("0".equals(input) || "f".equalsIgnoreCase(input)) {
-//                    circuit.add_Input(name, node.States.LOW);
+                    //circuit.add_Input(name, node.States.LOW);
                     circuit.add_Input(name);
                     break;
                 } else {
