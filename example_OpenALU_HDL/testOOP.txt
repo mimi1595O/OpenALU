@@ -1,0 +1,37 @@
+# advanced_adder_corrected.txt
+# This script defines an XOR gate and a Full Adder using OOP-style classes,
+# then instantiates a 4-bit ripple-carry adder with the correct syntax.
+
+# --- CLASS DEFINITIONS ---
+
+# Define a 2-input XOR gate
+class XOR (IN i1, i2; OUT o) {
+  NAND i1, i2, n1;
+  NAND i1, n1, n2;
+  NAND i2, n1, n3;
+  NAND n2, n3, o;
+}
+
+# Define a 1-bit Full Adder using our new XOR class
+class FULLADDER (IN A, B, Cin; OUT Sum, Cout) {
+  XOR A, B, xor_ab;
+  XOR xor_ab, Cin, Sum;
+
+  NAND A, B, nand_ab;
+  NAND xor_ab, Cin, nand_xc;
+  NAND nand_ab, nand_xc, Cout;
+}
+
+
+# --- CIRCUIT IMPLEMENTATION ---
+
+# Define main inputs and outputs
+IN A0,A1,A2,A3, B0,B1,B2,B3, C0;
+OUT C4,S3,S2,S1,S0;
+
+# Instantiate four FULLADDERs using the correct, simplified syntax.
+# The format is simply the class name followed by the port connections in order.
+FULLADDER A0, B0, C0, S0, C1;
+FULLADDER A1, B1, C1, S1, C2;
+FULLADDER A2, B2, C2, S2, C3;
+FULLADDER A3, B3, C3, S3, C4;

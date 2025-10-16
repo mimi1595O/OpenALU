@@ -1,0 +1,86 @@
+# 8-Bit Adder/Subtractor using OOP-style components
+# Filename: mux8bitcalc.txt
+# This circuit can perform both A+B and A-B based on a control signal.
+#
+# HOW TO USE:
+# - Set A[7:0] and B[7:0] to the 8-bit numbers you want to use.
+# - To ADD (A + B): Set the input 'SUB' to 0.
+# - To SUBTRACT (A - B): Set the input 'SUB' to 1.
+#
+# The result is shown on R[7:0].
+# C8 is the final Carry Out (for addition) or Borrow bit (for subtraction).
+
+# --- CLASS DEFINITIONS (Component Library) ---
+
+# Define a 2-input XOR gate
+class XOR (IN i1, i2; OUT o) {
+  NAND i1, i2, n1;
+  NAND i1, n1, n2;
+  NAND i2, n1, n3;
+  NAND n2, n3, o;
+};
+
+# Define a 2-input AND gate
+class AND (IN i1, i2; OUT o) {
+  NAND i1, i2, nand_out;
+  NOT nand_out, o;
+};
+
+# Define a 2-input OR gate
+class OR (IN i1, i2; OUT o) {
+  NOT i1, ni1;
+  NOT i2, ni2;
+  NAND ni1, ni2, o;
+};
+
+# Define a 2-to-1 Multiplexer
+# If S=0, Out=A. If S=1, Out=B.
+class MUX2_1 (IN A, B, S; OUT Out) {
+  NOT S, nS;
+  AND A, nS, term1;
+  AND B, S, term2;
+  OR term1, term2, Out;
+};
+
+# Define a 1-bit Full Adder
+class FULLADDER (IN A, B, Cin; OUT Sum, Cout) {
+  XOR A, B, xor_ab;
+  XOR xor_ab, Cin, Sum;
+
+  AND A, B, and_ab;
+  AND xor_ab, Cin, and_xc;
+  OR and_ab, and_xc, Cout;
+};
+
+
+# --- MAIN CIRCUIT IMPLEMENTATION ---
+
+# Define main inputs and outputs
+IN A0,A1,A2,A3,A4,A5,A6,A7;
+IN B0,B1,B2,B3,B4,B5,B6,B7;
+IN SUB; # Control Signal: 0 for ADD, 1 for SUBTRACT
+
+OUT C8, R7,R6,R5,R4,R3,R2,R1,R0; # Output C8 first for standard ALU format
+
+# Stage 1: Create the modified B input using MUXes.
+# For each bit, select between B_i and (NOT B_i) based on the SUB signal.
+NOT B0, nB0; MUX2_1 B0, nB0, SUB, B_mod0;
+NOT B1, nB1; MUX2_1 B1, nB1, SUB, B_mod1;
+NOT B2, nB2; MUX2_1 B2, nB2, SUB, B_mod2;
+NOT B3, nB3; MUX2_1 B3, nB3, SUB, B_mod3;
+NOT B4, nB4; MUX2_1 B4, nB4, SUB, B_mod4;
+NOT B5, nB5; MUX2_1 B5, nB5, SUB, B_mod5;
+NOT B6, nB6; MUX2_1 B6, nB6, SUB, B_mod6;
+NOT B7, nB7; MUX2_1 B7, nB7, SUB, B_mod7;
+
+# Stage 2: Connect 8 full adders in a ripple-carry chain.
+# The initial Carry-In for the whole chain is the SUB signal itself.
+FULLADDER A0, B_mod0, SUB, R0, C1;
+FULLADDER A1, B_mod1, C1,  R1, C2;
+FULLADDER A2, B_mod2, C2,  R2, C3;
+FULLADDER A3, B_mod3, C3,  R3, C4;
+FULLADDER A4, B_mod4, C4,  R4, C5;
+FULLADDER A5, B_mod5, C5,  R5, C6;
+FULLADDER A6, B_mod6, C6,  R6, C7;
+FULLADDER A7, B_mod7, C7,  R7, C8;
+# C8 is the final Carry/Borrow Out

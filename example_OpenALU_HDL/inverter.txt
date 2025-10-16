@@ -1,0 +1,4 @@
+IN A;
+OUT Z;
+P A, Vdd, Z;
+N A, Z, Vss;

@@ -1,0 +1,71 @@
+# 4-Bit Full Adder Circuit
+# This circuit adds two 4-bit numbers, A (A3,A2,A1,A0) and B (B3,B2,B1,B0),
+# along with an initial carry-in, C0.
+# It produces a 4-bit sum, S (S3,S2,S1,S0), and a final carry-out, C4.
+# The circuit is built from four 1-bit full adders chained together.
+
+# --- INPUTS ---
+# Define the two 4-bit numbers (A and B) and the initial carry-in.
+IN A0, A1, A2, A3
+IN B0, B1, B2, B3
+IN C0
+
+# --- OUTPUTS ---
+# Define the 4-bit sum and the final carry-out.
+OUT C4, S3,S2,S1,S0;
+
+# --- Full Adder for Bit 0 (LSB) ---
+# Inputs: A0, B0, C0
+# Outputs: S0 (Sum bit 0), C1 (Carry-out to next stage)
+# Internal nodes are prefixed with "FA0_"
+NAND A0, B0, FA0_n1;
+NAND A0, FA0_n1, FA0_n2;
+NAND B0, FA0_n1, FA0_n3;
+NAND FA0_n2, FA0_n3, FA0_n4;
+NAND C0, FA0_n4, FA0_n5;
+NAND C0, FA0_n5, FA0_n6;
+NAND FA0_n4, FA0_n5, FA0_n7;
+NAND FA0_n6, FA0_n7, S0;     # Sum bit 0
+NAND FA0_n1, FA0_n5, C1;      # Carry-out bit 0 (Carry-in for bit 1)
+
+# --- Full Adder for Bit 1 ---
+# Inputs: A1, B1, C1
+# Outputs: S1 (Sum bit 1), C2 (Carry-out to next stage)
+# Internal nodes are prefixed with "FA1_"
+NAND A1, B1, FA1_n1;
+NAND A1, FA1_n1, FA1_n2;
+NAND B1, FA1_n1, FA1_n3;
+NAND FA1_n2, FA1_n3, FA1_n4;
+NAND C1, FA1_n4, FA1_n5;
+NAND C1, FA1_n5, FA1_n6;
+NAND FA1_n4, FA1_n5, FA1_n7;
+NAND FA1_n6, FA1_n7, S1;      # Sum bit 1
+NAND FA1_n1, FA1_n5, C2;      # Carry-out bit 1 (Carry-in for bit 2)
+
+# --- Full Adder for Bit 2 ---
+# Inputs: A2, B2, C2
+# Outputs: S2 (Sum bit 2), C3 (Carry-out to next stage)
+# Internal nodes are prefixed with "FA2_"
+NAND A2, B2, FA2_n1;
+NAND A2, FA2_n1, FA2_n2;
+NAND B2, FA2_n1, FA2_n3;
+NAND FA2_n2, FA2_n3, FA2_n4;
+NAND C2, FA2_n4, FA2_n5;
+NAND C2, FA2_n5, FA2_n6;
+NAND FA2_n4, FA2_n5, FA2_n7;
+NAND FA2_n6, FA2_n7, S2;      # Sum bit 2
+NAND FA2_n1, FA2_n5, C3;      # Carry-out bit 2 (Carry-in for bit 3)
+
+# --- Full Adder for Bit 3 (MSB) ---
+# Inputs: A3, B3, C3
+# Outputs: S3 (Sum bit 3), C4 (Final carry-out)
+# Internal nodes are prefixed with "FA3_"
+NAND A3, B3, FA3_n1;
+NAND A3, FA3_n1, FA3_n2;
+NAND B3, FA3_n1, FA3_n3;
+NAND FA3_n2, FA3_n3, FA3_n4;
+NAND C3, FA3_n4, FA3_n5;
+NAND C3, FA3_n5, FA3_n6;
+NAND FA3_n4, FA3_n5, FA3_n7;
+NAND FA3_n6, FA3_n7, S3;      # Sum bit 3
+NAND FA3_n1, FA3_n5, C4;      # Final Carry-out

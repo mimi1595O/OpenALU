@@ -1,0 +1,5 @@
+IN z1,z2,z3;
+NOT z3, z1;
+NOT z1,z2;
+NOT z2,z3;
+OUT z1,z2,z3;
