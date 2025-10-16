@@ -5,7 +5,7 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import openalu.network.Godot;
+
 
 public class Circuit_file_interpreter {
 
@@ -45,80 +45,69 @@ public class Circuit_file_interpreter {
         System.out.println("Found blueprints: " + blueprints.keySet());
 
         buildCircuit(filePath);
-        Godot godot = new Godot();
+       /* Godot godot = new Godot();
         godot.start();
         godot.sendCommand("circuit", circuit.getJson());
-
-//        handleInputs();
-//        circuit.run();
-//        circuit.print_outputs();
+*/
+        
+        handleInputs();
+        circuit.run();
+         circuit.get_output();
     }
 
     /**
-     * <<--- THIS IS THE FULLY REWRITTEN METHOD ---
+     * 
      * Scans the file for all 'class' definitions, correctly handling single-line
      * and multi-line formats. It populates the blueprints map.
      */
     private void scanForBlueprints(String filePath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
-            int lineCounter = 0;
             ComponentBlueprint currentBlueprint = null;
+            int lineCounter = 0;
+            int class_start_line = 0;
             boolean inClassBody = false;
 
             while ((line = reader.readLine()) != null) {
                 lineCounter++;
-                String remainingLine = line.trim();
+                String trimmedLine = line.trim();
+                if (trimmedLine.isEmpty() || trimmedLine.startsWith("#")) continue;
 
-                if (remainingLine.isEmpty() || remainingLine.startsWith("#")) continue;
-
-                // This loop allows processing multiple definitions or parts on the same physical line
-                while (!remainingLine.isEmpty()) {
-                    if (inClassBody) {
-                        int braceIndex = remainingLine.indexOf('}');
-                        String bodyContent;
-                        if (braceIndex != -1) {
-                            bodyContent = remainingLine.substring(0, braceIndex);
-                            remainingLine = remainingLine.substring(braceIndex + 1).trim();
-                        } else {
-                            bodyContent = remainingLine;
-                            remainingLine = "";
+                if (!inClassBody && trimmedLine.startsWith("class ")) {
+                    Pattern p = Pattern.compile("class\\s+(\\w+)\\s*\\((.*)\\)\\s*\\{");
+                    Matcher m = p.matcher(trimmedLine);
+                    if (m.find()) {
+                        currentBlueprint = new ComponentBlueprint();
+                        currentBlueprint.name = m.group(1);
+                        parsePorts(currentBlueprint, m.group(2));
+                        inClassBody = true;
+                        class_start_line = lineCounter;
+                    }
+                } else if (inClassBody) {
+                    if (trimmedLine.startsWith("}")) {
+                        // **FIX**: Only add the blueprint if it's not null.
+                        if (currentBlueprint != null) {
+                            blueprints.put(currentBlueprint.name, currentBlueprint);
                         }
-
-                        if (!bodyContent.trim().isEmpty()) {
-                            String[] commands = bodyContent.split(";");
+                        currentBlueprint = null;
+                        inClassBody = false;
+                    } else {
+                        // **FIX**: Also check for null here before adding commands.
+                        if (currentBlueprint != null) {
+                            String[] commands = trimmedLine.split(";");
                             for (String cmd : commands) {
                                 if (!cmd.trim().isEmpty()) {
                                     currentBlueprint.internalNetlist.add(new BlueprintCommand(lineCounter, cmd.trim()));
                                 }
                             }
                         }
-
-                        if (braceIndex != -1) {
-                            blueprints.put(currentBlueprint.name, currentBlueprint);
-                            currentBlueprint = null;
-                            inClassBody = false;
-                        }
-                    } else { // Not in a class body, so we are looking for a new class definition
-                        if (remainingLine.startsWith("class ")) {
-                            Pattern p = Pattern.compile("^class\\s+(\\w+)\\s*\\((.*)\\)\\s*\\{");
-                            Matcher m = p.matcher(remainingLine);
-                            if (m.find()) {
-                                currentBlueprint = new ComponentBlueprint();
-                                currentBlueprint.name = m.group(1);
-                                parsePorts(currentBlueprint, m.group(2));
-                                inClassBody = true;
-                                remainingLine = remainingLine.substring(m.end()).trim();
-                            } else {
-                                // Malformed class, ignore the rest of this line
-                                remainingLine = "";
-                            }
-                        } else {
-                            // This line does not contain a class definition, ignore in this pass
-                            remainingLine = "";
-                        }
                     }
                 }
+                
+        
+            }if (inClassBody) {
+            String openClassName = (currentBlueprint != null && currentBlueprint.name != null) ? currentBlueprint.name : "unknown";
+            System.err.println("Error: Reached end of file while parsing class '" + openClassName + "'. Missing '}'? Class definition started on line " + class_start_line + ".");
             }
         }
     }
@@ -235,12 +224,12 @@ public class Circuit_file_interpreter {
                 System.out.print(name + " = ");
                 String input = scanner.nextLine().trim();
                 if ("1".equals(input) || "t".equalsIgnoreCase(input)) {
-                    circuit.add_Input(name, node.States.HIGH);
-//                    circuit.add_Input(name);
+                    //circuit.add_Input(name, node.States.HIGH);
+                  circuit.add_Input(name);
                     break;
                 } else if ("0".equals(input) || "f".equalsIgnoreCase(input)) {
-                    circuit.add_Input(name, node.States.LOW);
-//                    circuit.add_Input(name);
+                    //circuit.add_Input(name, node.States.LOW);
+                    circuit.add_Input(name);
                     break;
                 } else {
                     System.out.println("Invalid input. Please enter 1 or 0.");
