@@ -11,7 +11,7 @@ package openalu;
  */
 public class node {
     String name;
-    enum States {LOW,HIGH,FLOATING};
+    public enum States {LOW,HIGH,FLOATING};
     States state;
     boolean IsConst;
     

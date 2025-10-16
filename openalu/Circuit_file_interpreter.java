@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import openalu.network.Godot;
 
 public class Circuit_file_interpreter {
 
@@ -44,10 +45,13 @@ public class Circuit_file_interpreter {
         System.out.println("Found blueprints: " + blueprints.keySet());
 
         buildCircuit(filePath);
+        Godot godot = new Godot();
+        godot.start();
+        godot.sendCommand("circuit", circuit.getJson());
 
-        handleInputs();
-        circuit.run();
-        circuit.print_outputs();
+//        handleInputs();
+//        circuit.run();
+//        circuit.print_outputs();
     }
 
     /**
@@ -231,12 +235,12 @@ public class Circuit_file_interpreter {
                 System.out.print(name + " = ");
                 String input = scanner.nextLine().trim();
                 if ("1".equals(input) || "t".equalsIgnoreCase(input)) {
-                    //circuit.add_Input(name, node.States.HIGH);
-                    circuit.add_Input(name);
+                    circuit.add_Input(name, node.States.HIGH);
+//                    circuit.add_Input(name);
                     break;
                 } else if ("0".equals(input) || "f".equalsIgnoreCase(input)) {
-                    //circuit.add_Input(name, node.States.LOW);
-                    circuit.add_Input(name);
+                    circuit.add_Input(name, node.States.LOW);
+//                    circuit.add_Input(name);
                     break;
                 } else {
                     System.out.println("Invalid input. Please enter 1 or 0.");

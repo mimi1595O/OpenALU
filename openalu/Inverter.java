@@ -12,9 +12,9 @@ import java.util.Arrays;
  */
 public class Inverter extends Components {
     public Inverter(node in, node... outputs){
-    super();
-    this.inputs.add(in);
-    this.outputs.addAll(Arrays.asList(outputs));
+        super();
+        this.inputs.add(in);
+        this.outputs.addAll(Arrays.asList(outputs));
     }
     @Override
     public void evaluate() {

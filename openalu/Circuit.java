@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -36,10 +37,10 @@ public class Circuit {
     
     
     
-//    public void add_Input(String name, node.States state) {        
-    public void add_Input(String name) {        
+    public void add_Input(String name, node.States state) {        
+//    public void add_Input(String name) {        
         get_Or_Create_Node(name);
-//        this.nodes.get(name).set_State(state);
+        this.nodes.get(name).set_State(state);
     }
     
     public void add_Output(String name){
@@ -131,4 +132,56 @@ public class Circuit {
         }
         System.out.println();
     }
+    
+    public String getJson() {
+        StringBuilder json = new StringBuilder();
+        json.append("{\n");
+
+        // 1. Add all Nodes
+        json.append("  \"nodes\": {\n");
+        String nodesJson = nodes.entrySet().stream()
+            .map(entry -> {
+                node n = entry.getValue();
+                return String.format("    \"%s\": {\"state\": \"%s\", \"isConstant\": %b}",
+                    n.name, n.get_State().toString(), n.IsConst);
+            })
+            .collect(Collectors.joining(",\n"));
+        json.append(nodesJson);
+        json.append("\n  },\n");
+
+        // 2. Add all Components
+        json.append("  \"components\": [\n");
+        String componentsJson = components.stream()
+            .map(comp -> {
+                String compClass = comp.getClass().getSimpleName();
+                String inputsJson = comp.inputs.stream()
+                    .map(n -> "\"" + n.name + "\"")
+                    .collect(Collectors.joining(", "));
+                String outputsJson = comp.outputs.stream()
+                    .map(n -> "\"" + n.name + "\"")
+                    .collect(Collectors.joining(", "));
+                return String.format("    {\"type\": \"%s\", \"inputs\": [%s], \"outputs\": [%s]}",
+                    compClass, inputsJson, outputsJson);
+            })
+            .collect(Collectors.joining(",\n"));
+        json.append(componentsJson);
+        json.append("\n  ],\n");
+
+        // 3. Add Input and Output Node Names for reference
+        String inputNodesJson = nodes.values().stream()
+                .filter(n -> !n.IsConst) // A simple heuristic: inputs are non-constant nodes
+                .map(n -> "\"" + n.name + "\"")
+                .collect(Collectors.joining(", "));
+        json.append("  \"inputs\": [").append(inputNodesJson).append("],\n");
+
+        String outputNodesJson = outputNodeNames.stream()
+                .map(name -> "\"" + name + "\"")
+                .collect(Collectors.joining(", "));
+        json.append("  \"outputs\": [").append(outputNodesJson).append("]\n");
+
+
+        json.append("}\n");
+        return json.toString();
+    }
+
 }
