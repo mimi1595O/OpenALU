@@ -36,10 +36,10 @@ public class Circuit {
     
     
     
-    public void add_Input(String name, node.States state) {
-        
+//    public void add_Input(String name, node.States state) {        
+    public void add_Input(String name) {        
         get_Or_Create_Node(name);
-        this.nodes.get(name).set_State(state);
+//        this.nodes.get(name).set_State(state);
     }
     
     public void add_Output(String name){

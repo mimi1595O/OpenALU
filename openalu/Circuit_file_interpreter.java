@@ -207,10 +207,12 @@ public class Circuit_file_interpreter {
                 System.out.print(name + " = ");
                 String input = scanner.nextLine().trim();
                 if ("1".equals(input) || "t".equalsIgnoreCase(input)) {
-                    circuit.add_Input(name, node.States.HIGH);
+//                    circuit.add_Input(name, node.States.HIGH);
+                    circuit.add_Input(name);
                     break;
                 } else if ("0".equals(input) || "f".equalsIgnoreCase(input)) {
-                    circuit.add_Input(name, node.States.LOW);
+//                    circuit.add_Input(name, node.States.LOW);
+                    circuit.add_Input(name);
                     break;
                 } else {
                     System.out.println("Invalid input. Please enter 1 or 0.");
